@@ -4,6 +4,7 @@ import java.util.Arrays;
 public class Main {
 
     public static void main(String[] args) {
+        Double ss = null;
         DecisionTree d = new DecisionTree();
         ArrayList<ArrayList<Double>> x = new ArrayList<ArrayList<Double>>();
         x.add(new ArrayList<Double>(Arrays.asList(1., 2., 3.)));
