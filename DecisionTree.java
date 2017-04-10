@@ -14,6 +14,17 @@ class DecisionTree {
         return count;
     }
 
+    private int get_max_y(ArrayList<Integer> input) {
+        Map<Integer, Integer> count = get_count(input);
+        int max_y = 1;
+        if (count.containsKey(0)) {
+            if (!count.containsKey(1) || count.get(0) > count.get(1)) {
+                max_y = 0;
+            }
+        }
+        return max_y;
+    }
+
     private class Node {
         boolean is_leaf;
         int value;
@@ -55,6 +66,7 @@ class DecisionTree {
         ArrayList<Integer> left_indexes = new ArrayList<>();
         ArrayList<Integer> right_indexes = new ArrayList<>();
         int left_value = 1;
+        int right_value = 1;
 
         for (int i = 0; i < x.get(0).size(); ++i) {
             ArrayList<Double> all_values = new ArrayList<>();
@@ -64,6 +76,9 @@ class DecisionTree {
             Collections.sort(all_values);
             // Could be optimised here
             for (int j = 0; j < all_values.size() - 1; ++j) {
+                if (all_values.get(j + 1) - all_values.get(j) < 1e-6) {
+                    continue;
+                }
                 // [0 .. j] , [j + 1, ...]
                 ArrayList<Integer> left = new ArrayList<>();
                 ArrayList<Integer> right = new ArrayList<>();
@@ -88,13 +103,8 @@ class DecisionTree {
                     left_indexes = l_indexes;
                     right_indexes = r_indexes;
 
-                    Map<Integer, Integer> count = get_count(left);
-
-                    if (count.containsKey(0)) {
-                        if (!count.containsKey(1) || count.get(0) > count.get(1)) {
-                            left_value = 0;
-                        }
-                    }
+                    left_value = get_max_y(left);
+                    right_value = get_max_y(right);
 
                 }
             }
@@ -105,7 +115,7 @@ class DecisionTree {
             node.split_index = x_split;
             node.split_value = x_value;
             node.left = new Node(left_value);
-            node.right = new Node(1 - left_value);
+            node.right = new Node(right_value);
             ArrayList<ArrayList<Double>> x_left = new ArrayList<>();
             ArrayList<ArrayList<Double>> x_right = new ArrayList<>();
             ArrayList<Integer> y_left = new ArrayList<>();
@@ -125,13 +135,8 @@ class DecisionTree {
     }
 
     void learn(ArrayList<ArrayList<Double>> x, ArrayList<Integer> y) {
-        Map<Integer, Integer> count = get_count(y);
-        int root_value = 1;
-        if (count.containsKey(0)) {
-            if (!count.containsKey(1) || count.get(0) > count.get(1)) {
-                root_value = 0;
-            }
-        }
+
+        int root_value = get_max_y(y);
 
         root = new Node(root_value);
         root.is_leaf = true;
@@ -139,7 +144,7 @@ class DecisionTree {
         split_node(root, 3, x, y);
     }
 
-    public int predict(ArrayList<Double> x) {
+    int predict(ArrayList<Double> x) {
         Node node = root;
         while (!node.is_leaf) {
             if (x.get(node.split_index) < node.split_value) {
