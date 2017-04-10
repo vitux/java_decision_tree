@@ -50,8 +50,8 @@ class DecisionTree {
 
         double best_entropy = curr_entropy - 1e-6;
         boolean is_split = false;
-        int x_split;
-        double x_value;
+        int x_split = 0;
+        double x_value = 0;
         ArrayList<Integer> left_indexes = new ArrayList<>();
         ArrayList<Integer> right_indexes = new ArrayList<>();
         int left_value = 1;
@@ -102,6 +102,8 @@ class DecisionTree {
 
         if (is_split) {
             node.is_leaf = false;
+            node.split_index = x_split;
+            node.split_value = x_value;
             node.left = new Node(left_value);
             node.right = new Node(1 - left_value);
             ArrayList<ArrayList<Double>> x_left = new ArrayList<>();
@@ -112,7 +114,7 @@ class DecisionTree {
                 x_left.add(x.get(left_index));
                 y_left.add(y.get(left_index));
             }
-            for (Integer right_index : left_indexes) {
+            for (Integer right_index : right_indexes) {
                 x_right.add(x.get(right_index));
                 y_right.add(y.get(right_index));
             }
@@ -134,12 +136,7 @@ class DecisionTree {
         root = new Node(root_value);
         root.is_leaf = true;
 
-//        root.split_index = 0;
-//        root.split_value = 3.5;
-//        Node left = new Node(0);
-//        Node right = new Node(1);
-//        root.left = left;
-//        root.right = right;
+        split_node(root, 3, x, y);
     }
 
     public int predict(ArrayList<Double> x) {
