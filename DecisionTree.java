@@ -18,15 +18,18 @@ class DecisionTree {
         }
         return count;
     }
-
+    
     private int get_max_y(ArrayList<Integer> input) {
         Map<Integer, Integer> count = get_count(input);
+        int max_val = -1;
         int max_y = 1;
-        if (count.containsKey(0)) {
-            if (!count.containsKey(1) || count.get(0) > count.get(1)) {
-                max_y = 0;
+        for (Map.Entry<Integer, Integer> entry: count.entrySet()) {
+            if (entry.getValue() > max_val) {
+                max_val = entry.getValue();
+                max_y = entry.getKey();
             }
         }
+        
         return max_y;
     }
 
