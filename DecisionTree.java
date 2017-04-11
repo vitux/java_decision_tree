@@ -134,7 +134,7 @@ class DecisionTree {
 
     }
 
-    void learn(ArrayList<ArrayList<Double>> x, ArrayList<Integer> y) {
+    void fit(ArrayList<ArrayList<Double>> x, ArrayList<Integer> y) {
 
         int root_value = get_max_y(y);
 
