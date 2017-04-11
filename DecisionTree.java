@@ -1,7 +1,12 @@
+import java.io.Serializable;
 import java.util.*;
+import java.util.function.BooleanSupplier;
+import java.util.function.DoubleBinaryOperator;
 
 
 class DecisionTree {
+    private int max_depth = 3;
+
     private Map<Integer, Integer> get_count(ArrayList<Integer> input) {
         TreeMap<Integer, Integer> count = new TreeMap<>();
         for (Integer y_curr: input) {
@@ -37,6 +42,32 @@ class DecisionTree {
         Node(int value) {
             is_leaf = true;
             this.value = value;
+        }
+
+        Node(String serialized_node) {
+            String[] parts = serialized_node.split("\t");
+            boolean is_left = Boolean.valueOf(parts[0]);
+            boolean is_right = Boolean.valueOf(parts[1]);
+            if (is_left) {
+                left = new Node();
+            }
+            if (is_right) {
+                right = new Node();
+            }
+            is_leaf = !(is_left || is_right);
+            value = Integer.valueOf(parts[2]);
+            split_index = Integer.valueOf(parts[3]);
+            split_value = Double.valueOf(parts[4]);
+        }
+
+        Node() {
+
+        }
+
+        @Override
+        public String toString() {
+            return "" + (left != null) + "\t" + (right != null) + "\t" +
+                    value + "\t" + split_index + "\t" + split_value;
         }
     }
 
@@ -141,7 +172,7 @@ class DecisionTree {
         root = new Node(root_value);
         root.is_leaf = true;
 
-        split_node(root, 3, x, y);
+        split_node(root, max_depth, x, y);
     }
 
     int predict(ArrayList<Double> x) {
@@ -156,4 +187,52 @@ class DecisionTree {
         return node.value;
     }
 
+    private void addNode(Node node, ArrayList<Node> nodeInfos) {
+        nodeInfos.add(node);
+        if (node.left != null) {
+            addNode(node.left, nodeInfos);
+        }
+        if (node.right != null) {
+            addNode(node.right, nodeInfos);
+        }
+    }
+
+    @Override
+    public String toString() {
+        if (root == null) {
+            return "";
+        }
+        ArrayList<Node> nodeInfos = new ArrayList<>();
+        addNode(root, nodeInfos);
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < nodeInfos.size(); ++i) {
+            sb.append(nodeInfos.get(i).toString());
+            if (i != nodeInfos.size() - 1) {
+                sb.append(";");
+            }
+        }
+        return sb.toString();
+    }
+
+    private int unserialize(Node node, String[] nodes, int next_index) {
+        if (node.left != null) {
+            node.left = new Node(nodes[next_index]);
+            next_index = unserialize(node.left, nodes, next_index + 1);
+        }
+        if (node.right != null) {
+            node.right = new Node(nodes[next_index]);
+            next_index = unserialize(node.right, nodes, next_index + 1);
+        }
+        return next_index;
+    }
+
+    public void fromString(String s) {
+        String[] nodes = s.split(";");
+        if (nodes.length == 0) {
+            root = null;
+            return;
+        }
+        root = new Node(nodes[0]);
+        unserialize(root, nodes, 1);
+    }
 }
