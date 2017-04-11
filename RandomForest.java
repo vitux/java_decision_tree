@@ -90,6 +90,10 @@ class RandomForest {
         }
     }
     
+    /*
+     Prediction.
+     */
+    
     public Integer predict (ArrayList<Double> x) {
         ArrayList<Integer> answers = new ArrayList<Integer>();
         for(DecisionTree tree : trees) {
@@ -97,6 +101,16 @@ class RandomForest {
         }
         Collections.sort(answers);
         return mostFrequentElement(answers);
+    }
+    
+    /*
+     Merge.
+     */
+    
+    private void mergeWith (RandomForest other) {
+        for(DecisionTree tree : other.trees) {
+            trees.add(tree);
+        }
     }
     
 };
