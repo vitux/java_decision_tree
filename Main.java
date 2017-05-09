@@ -9,13 +9,12 @@ public class Main {
         Double ss = null;
         DecisionTree d = new DecisionTree();
         ArrayList<ArrayList<Feature>> x = new ArrayList<ArrayList<Feature>>();
-        /*
+
         x.add(new ArrayList<>(Arrays.asList(new CategoricalFeature(1))));
         x.add(new ArrayList<>(Arrays.asList(new CategoricalFeature(2))));
-        x.add(new ArrayList<>(Arrays.asList(new CategoricalFeature(3))));
-        x.add(new ArrayList<>(Arrays.asList(new CategoricalFeature(4))));*/
-        ArrayList<Integer> y = new ArrayList<Integer>(); //Arrays.asList(1, 1, 1, 0));
-        ArrayList<Double> w = new ArrayList<>(); // Arrays.asList(1., 1., 1., 2.9));
+        x.add(new ArrayList<>(Arrays.asList(new CategoricalFeature(null))));
+        ArrayList<Integer> y = new ArrayList<>(Arrays.asList(0, 1, 1));
+        ArrayList<Double> w = new ArrayList<>(Arrays.asList(1., 1., 1.));/*
         for (int i = 0; i < 1000; ++i) {
 
             if ((i & 1) == 1) {
@@ -30,7 +29,7 @@ public class Main {
                 w.add(1.);
                 y.add(0);
             }
-        }
+        }*/
 
         d.fit(x, w, y);
         String serialized = d.toString();
@@ -40,17 +39,13 @@ public class Main {
         d2.fromString(serialized);
 
         System.out.println(d2.toString());
-        /*
-        System.out.println(d.predict(new ArrayList<Feature>(Arrays.asList(new CategoricalFeature(1)))));
-        System.out.println(d.predict(new ArrayList<Feature>(Arrays.asList(new CategoricalFeature(2)))));
-        System.out.println(d.predict(new ArrayList<Feature>(Arrays.asList(new CategoricalFeature(3)))));
-        System.out.println(d.predict(new ArrayList<Feature>(Arrays.asList(new CategoricalFeature(4)))));
+
         System.out.println(d2.predict(new ArrayList<Feature>(Arrays.asList(new CategoricalFeature(1)))));
         System.out.println(d2.predict(new ArrayList<Feature>(Arrays.asList(new CategoricalFeature(2)))));
-        System.out.println(d2.predict(new ArrayList<Feature>(Arrays.asList(new CategoricalFeature(3)))));
+        System.out.println(d2.predict(new ArrayList<Feature>(Arrays.asList(new CategoricalFeature(null)))));
         System.out.println(d2.predict(new ArrayList<Feature>(Arrays.asList(new CategoricalFeature(4)))));
-        /*if (1 == 1) return;
-*/
+        if (1 == 1) return;
+
         for (int i = 0; i < 10; ++i) {
             for (int j = 0; j < 10; ++j) {
                 double q1 = 0.3 * i;

@@ -4,13 +4,13 @@ abstract class Feature implements Comparable{
 }
 
 class NumericalFeature extends Feature {
-    private double value;
+    private Double value;
 
-    NumericalFeature(double value) {
+    NumericalFeature(Double value) {
         this.value = value;
     }
 
-    public double getValue() {
+    Double getValue() {
         return value;
     }
 
@@ -21,18 +21,22 @@ class NumericalFeature extends Feature {
 }
 
 class CategoricalFeature extends Feature {
-    private int value;
+    private Integer value;
 
-    CategoricalFeature(int value) {
+    CategoricalFeature(Integer value) {
         this.value = value;
     }
 
-    public int getValue() {
+    Integer getValue() {
         return value;
     }
 
     @Override
     public int compareTo(Object o) {
-        return 0;
+        if (value == null)
+            return -1;
+        if (((CategoricalFeature) o).getValue() == null)
+            return 1;
+        return Integer.compare(value, ((CategoricalFeature) o).getValue());
     }
 }

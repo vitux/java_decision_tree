@@ -6,6 +6,8 @@ import java.util.function.DoubleBinaryOperator;
 
 class DecisionTree {
 
+    int tree_max_depth = 3;
+
     private Map<Integer, Double> get_count(ArrayList<Integer> input, ArrayList<Double> w) {
         TreeMap<Integer, Double> count = new TreeMap<>();
         for (int i = 0; i < input.size(); ++i) {
@@ -39,6 +41,7 @@ class DecisionTree {
         int value;
 
         int split_index;
+        int null_side;
 
         boolean is_categorical_split;
         double split_value;
@@ -70,6 +73,8 @@ class DecisionTree {
 
             is_categorical_split = Boolean.valueOf(parts[5]);
             split_left_class = Integer.valueOf(parts[6]);
+
+            null_side = Integer.valueOf(parts[7]);
         }
 
         Node() {
@@ -80,7 +85,7 @@ class DecisionTree {
         public String toString() {
             return "" + (left != null) + "\t" + (right != null) + "\t" +
                     value + "\t" + split_index + "\t" + split_value + "\t" + is_categorical_split +
-                    "\t" + split_left_class;
+                    "\t" + split_left_class + "\t" + null_side;
         }
     }
 
@@ -107,67 +112,89 @@ class DecisionTree {
         Collections.sort(all_values);
 
         int previous_category = -1;
-        for (int j = 0; j < all_values.size() - 1; ++j) {
-            if (all_values.get(0) instanceof NumericalFeature) {
-                if (((NumericalFeature) all_values.get(j + 1)).getValue() -
-                        ((NumericalFeature)all_values.get(j)).getValue() < 1e-6) {
-                    continue;
-                }
-            } else {
-                int curr_category = ((CategoricalFeature)all_values.get(j)).getValue();
-                if (curr_category == previous_category)
-                    continue;
-                previous_category = curr_category;
-            }
-            // [0 .. j] , [j + 1, ...]
-            ArrayList<Integer> left = new ArrayList<>();
-            ArrayList<Integer> right = new ArrayList<>();
-            ArrayList<Double> left_w = new ArrayList<>();
-            ArrayList<Double> right_w = new ArrayList<>();
-            ArrayList<Integer> l_indexes = new ArrayList<>();
-            ArrayList<Integer> r_indexes = new ArrayList<>();
-            double sum_left = 0;
-            double sum_right = 0;
+        for (int null_side = 0; null_side < 2; ++null_side) {
+            for (int j = 0; j < all_values.size(); ++j) {
 
-            for (int k = 0; k < y.size(); ++k) {
-                boolean is_left;
                 if (all_values.get(j) instanceof NumericalFeature) {
-                    is_left = ((NumericalFeature) x.get(k).get(i)).getValue() <=
-                            ((NumericalFeature)all_values.get(j)).getValue();
+                    if (((NumericalFeature) all_values.get(j)).getValue() == null) {
+                        continue;
+                    }
+                    if (j == all_values.size() - 1) {
+                        continue;
+                    }
+                    if (((NumericalFeature) all_values.get(j + 1)).getValue() -
+                            ((NumericalFeature) all_values.get(j)).getValue() < 1e-6) {
+                        continue;
+                    }
                 } else {
-                    is_left = ((CategoricalFeature) x.get(k).get(i)).getValue() ==
-                            ((CategoricalFeature)all_values.get(j)).getValue();
-                }
-                if (is_left) {
-                    left.add(y.get(k));
-                    left_w.add(w.get(k));
-                    sum_left += w.get(k);
-                    l_indexes.add(k);
-                } else {
-                    right.add(y.get(k));
-                    right_w.add(w.get(k));
-                    sum_right += w.get(k);
-                    r_indexes.add(k);
-                }
-            }
 
-            double new_entropy = (sum_left * entropy(left, left_w) +
-                    sum_right * entropy(right, right_w)) / (sum_left + sum_right);
-            if (new_entropy < splitConfig.best_entropy) {
-                splitConfig.best_entropy = new_entropy;
-                splitConfig.is_split = true;
-                splitConfig.x_split = i;
-                splitConfig.is_categorical = all_values.get(0) instanceof CategoricalFeature;
-                if (splitConfig.is_categorical) {
-                    splitConfig.left_category = ((CategoricalFeature)all_values.get(j)).getValue();
-                } else {
-                    splitConfig.x_value = (((NumericalFeature)all_values.get(j)).getValue() +
-                            ((NumericalFeature)all_values.get(j + 1)).getValue()) / 2;
+                    Integer curr_category = ((CategoricalFeature) all_values.get(j)).getValue();
+
+                    if (curr_category == null || curr_category == previous_category)
+                        continue;
+                    previous_category = curr_category;
                 }
-                splitConfig.left_indexes = l_indexes;
-                splitConfig.right_indexes = r_indexes;
-                splitConfig.left_value = get_max_y(left, left_w);
-                splitConfig.right_value = get_max_y(right, right_w);
+                // [0 .. j] , [j + 1, ...]
+                ArrayList<Integer> left = new ArrayList<>();
+                ArrayList<Integer> right = new ArrayList<>();
+                ArrayList<Double> left_w = new ArrayList<>();
+                ArrayList<Double> right_w = new ArrayList<>();
+                ArrayList<Integer> l_indexes = new ArrayList<>();
+                ArrayList<Integer> r_indexes = new ArrayList<>();
+                double sum_left = 0;
+                double sum_right = 0;
+
+                for (int k = 0; k < y.size(); ++k) {
+                    boolean is_left;
+
+                    if (all_values.get(j) instanceof NumericalFeature) {
+                        if (((NumericalFeature) x.get(k).get(i)).getValue() == null) {
+                            is_left = (null_side == 0);
+                        } else {
+                            is_left = ((NumericalFeature) x.get(k).get(i)).getValue() <=
+                                    ((NumericalFeature) all_values.get(j)).getValue();
+                        }
+                    } else {
+                        if (((CategoricalFeature) x.get(k).get(i)).getValue() == null) {
+                            is_left = (null_side == 0);
+                        } else {
+                            is_left = Objects.equals(((CategoricalFeature) x.get(k).get(i)).getValue(),
+                                    ((CategoricalFeature) all_values.get(j)).getValue());
+                        }
+                    }
+
+                    if (is_left) {
+                        left.add(y.get(k));
+                        left_w.add(w.get(k));
+                        sum_left += w.get(k);
+                        l_indexes.add(k);
+                    } else {
+                        right.add(y.get(k));
+                        right_w.add(w.get(k));
+                        sum_right += w.get(k);
+                        r_indexes.add(k);
+                    }
+                }
+
+                double new_entropy = (sum_left * entropy(left, left_w) +
+                        sum_right * entropy(right, right_w)) / (sum_left + sum_right);
+                if (new_entropy < splitConfig.best_entropy) {
+                    splitConfig.best_entropy = new_entropy;
+                    splitConfig.is_split = true;
+                    splitConfig.x_split = i;
+                    splitConfig.null_side = null_side;
+                    splitConfig.is_categorical = all_values.get(0) instanceof CategoricalFeature;
+                    if (splitConfig.is_categorical) {
+                        splitConfig.left_category = ((CategoricalFeature) all_values.get(j)).getValue();
+                    } else {
+                        splitConfig.x_value = (((NumericalFeature) all_values.get(j)).getValue() +
+                                ((NumericalFeature) all_values.get(j + 1)).getValue()) / 2;
+                    }
+                    splitConfig.left_indexes = l_indexes;
+                    splitConfig.right_indexes = r_indexes;
+                    splitConfig.left_value = get_max_y(left, left_w);
+                    splitConfig.right_value = get_max_y(right, right_w);
+                }
             }
         }
     }
@@ -184,6 +211,7 @@ class DecisionTree {
         int right_value = 1;
         boolean is_categorical = false;
         int left_category = -1;
+        int null_side = 0;
         SplitConfig(double curr_entropy) {
             this.curr_entropy = curr_entropy;
             this.best_entropy = curr_entropy - 1e-6;
@@ -219,6 +247,7 @@ class DecisionTree {
 
         node.is_categorical_split = splitConfig.is_categorical;
         node.split_left_class = splitConfig.left_category;
+        node.null_side = splitConfig.null_side;
 
         ArrayList<ArrayList<Feature>> x_left = new ArrayList<>();
         ArrayList<ArrayList<Feature>> x_right = new ArrayList<>();
@@ -249,7 +278,7 @@ class DecisionTree {
         root = new Node(root_value);
         root.is_leaf = true;
 
-        int max_depth = 3;
+        int max_depth = tree_max_depth;
         split_node(root, max_depth, x, w, y);
     }
 
@@ -257,16 +286,32 @@ class DecisionTree {
         Node node = root;
         while (!node.is_leaf) {
             if (node.is_categorical_split) {
-                if (((CategoricalFeature)x.get(node.split_index)).getValue() == node.split_left_class) {
-                    node = node.left;
+                if (((CategoricalFeature) x.get(node.split_index)).getValue() == null) {
+                    if (node.null_side == 0) {
+                        node = node.left;
+                    } else {
+                        node = node.right;
+                    }
                 } else {
-                    node = node.right;
+                    if (((CategoricalFeature)x.get(node.split_index)).getValue() == node.split_left_class) {
+                        node = node.left;
+                    } else {
+                        node = node.right;
+                    }
                 }
             } else {
-                if (((NumericalFeature)x.get(node.split_index)).getValue() < node.split_value) {
-                    node = node.left;
+                if (((NumericalFeature) x.get(node.split_index)).getValue() == null) {
+                    if (node.null_side == 0) {
+                        node = node.left;
+                    } else {
+                        node = node.right;
+                    }
                 } else {
-                    node = node.right;
+                    if (((NumericalFeature) x.get(node.split_index)).getValue() < node.split_value) {
+                        node = node.left;
+                    } else {
+                        node = node.right;
+                    }
                 }
             }
         }
