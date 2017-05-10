@@ -94,9 +94,12 @@ class DecisionTree {
     private double entropy(ArrayList<Integer> y, ArrayList<Double> w) {
         Map<Integer, Double> count = get_count(y, w);
 
+        double w_sum = 0;
+        for (int i = 0; i < y.size(); ++i)
+            w_sum += w.get(i);
         double entropy = 0;
         for (Map.Entry<Integer, Double> entry: count.entrySet()) {
-            double frequency = entry.getValue() / y.size();
+            double frequency = entry.getValue() / w_sum; //y.size();
             entropy -= frequency * Math.log(frequency);
         }
         return entropy;
