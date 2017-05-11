@@ -83,7 +83,7 @@ public class MultipleDecisionTrees extends AbstractClassifier {
 
         trees = new ArrayList<DecisionTree>();
         for (int treeId = 0; treeId < nTrees; ++treeId) if (jobInputW.get(treeId).size() > 0) {
-            DecisionTree currentTree = new DecisionTree();
+            DecisionTree currentTree = new DecisionTree(3);
             currentTree.fit(jobInputX.get(treeId), jobInputW.get(treeId), jobInputY.get(treeId));
             trees.add(currentTree);
         }
