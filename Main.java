@@ -7,7 +7,7 @@ public class Main {
     public static void main(String[] args) {
         Random rr = new Random();
         Double ss = null;
-        DecisionTree d = new DecisionTree();
+        DecisionTree d = new DecisionTree(2);
         ArrayList<ArrayList<Feature>> x = new ArrayList<ArrayList<Feature>>();
 
         x.add(new ArrayList<>(Arrays.asList(new CategoricalFeature(1))));
@@ -35,7 +35,7 @@ public class Main {
         String serialized = d.toString();
         System.out.println(d.toString());
 
-        DecisionTree d2 = new DecisionTree();
+        DecisionTree d2 = new DecisionTree(2);
         d2.fromString(serialized);
 
         System.out.println(d2.toString());
