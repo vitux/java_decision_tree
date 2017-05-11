@@ -4,47 +4,28 @@
 import java.util.*;
 
 
-public class RandomForest extends AbstractClassifier {
+public class MultipleDecisionTrees extends AbstractClassifier {
     public static final String TREE_DELIMITER = "!";
 
     private int nTrees;
     private ArrayList<DecisionTree> trees;
 
     /*
-     Constructors: the number of trees in the forest will be equal to 10 by default,
-                   or can be re-specified in the constructor.
+     Constructors: the number of trees to split the data.
      */
 
     private void init() {
         trees = new ArrayList<DecisionTree>();
     }
 
-    public RandomForest() {
+    public MultipleDecisionTrees() {
         init();
         nTrees = 10;
     }
 
-    public RandomForest(int _nTrees) {
+    public MultipleDecisionTrees(int _nTrees) {
         init();
         nTrees = _nTrees;
-    }
-
-    /*
-     Helpers.
-     */
-
-    private ArrayList<Integer> getSample(int samplesNumber) {
-        ArrayList<Integer> result = new ArrayList<Integer>();
-        Random gen = new Random();
-        for (int i = 0; i < samplesNumber; ++i) {
-            if (gen.nextBoolean()) {
-                result.add(i);
-            }
-        }
-        if (result.size() == 0) {
-            result.add(gen.nextInt(samplesNumber));
-        }
-        return result;
     }
 
     private Integer mostFrequentElement(ArrayList<Integer> input) {
@@ -81,26 +62,30 @@ public class RandomForest extends AbstractClassifier {
     
     public void fit(ArrayList<ArrayList<Feature>> x, ArrayList<Double> w, ArrayList<Integer> y) {
         int samplesNumber = x.size();
+        
+        ArrayList<ArrayList<ArrayList<Feature>>> jobInputX = new ArrayList<ArrayList<ArrayList<Feature>>>();
+        ArrayList<ArrayList<Integer>> jobInputY = new ArrayList<ArrayList<Integer>>();
+        ArrayList<ArrayList<Double>> jobInputW = new ArrayList<ArrayList<Double>>();
+        
+        for(int i = 0; i < samplesNumber; ++i) {
+            jobInputX.add(new ArrayList<ArrayList<Feature>>());
+            jobInputY.add(new ArrayList<Integer>());
+            jobInputW.add(new ArrayList<Double>());
+        }
+        
+        Random gen = new Random();
+        for(int i = 0; i < samplesNumber; ++i) {
+            int jobId = gen.nextInt(nTrees);
+            jobInputX.get(jobId).add(x.get(i));
+            jobInputY.get(jobId).add(y.get(i));
+            jobInputW.get(jobId).add(w.get(i));
+        }
 
         trees = new ArrayList<DecisionTree>();
-        for (int treeId = 0; treeId < nTrees; ++treeId) {
+        for (int treeId = 0; treeId < nTrees; ++treeId) if (jobInputW.get(treeId).size() > 0) {
             DecisionTree currentTree = new DecisionTree();
-
-            ArrayList<ArrayList<Feature>> sampleX = new ArrayList<ArrayList<Feature>>();
-            ArrayList<Integer> sampleY = new ArrayList<Integer>();
-            ArrayList<Double> sampleW = new ArrayList<Double>();
-
-            ArrayList<Integer> subsampleIndices = getSample(samplesNumber);
-            for (int index : subsampleIndices) {
-                sampleX.add(x.get(index));
-                sampleY.add(y.get(index));
-                sampleW.add(w.get(index));
-            }
-
-            currentTree.fit(sampleX, sampleW, sampleY);
-
+            currentTree.fit(jobInputX.get(treeId), jobInputW.get(treeId), jobInputY.get(treeId));
             trees.add(currentTree);
-
         }
     }
 
