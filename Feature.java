@@ -16,6 +16,10 @@ class NumericalFeature extends Feature {
 
     @Override
     public int compareTo(Object o) {
+        if (value == null)
+            return -1;
+        if (((NumericalFeature) o).getValue() == null)
+            return 1;
         return Double.compare(value, ((NumericalFeature) o).getValue());
     }
 }
