@@ -6,8 +6,11 @@ import java.util.function.DoubleBinaryOperator;
 
 class DecisionTree {
 
-    int tree_max_depth = 3;
+    private int tree_max_depth;
 
+    DecisionTree (int tree_max_depth) {
+        this.tree_max_depth = tree_max_depth;
+    }
     private Map<Integer, Double> get_count(ArrayList<Integer> input, ArrayList<Double> w) {
         TreeMap<Integer, Double> count = new TreeMap<>();
         for (int i = 0; i < input.size(); ++i) {
@@ -272,6 +275,14 @@ class DecisionTree {
         }
         split_node(node.left, max_depth - 1, x_left, w_left, y_left);
         split_node(node.right, max_depth - 1, x_right, w_right, y_right);
+    }
+
+    void fit(ArrayList<ArrayList<Feature>> x, ArrayList<Integer> y) {
+        ArrayList<Double> w = new ArrayList<>();
+        for (int i = 0; i < y.size(); ++i) {
+            w.add(1.);
+        }
+        fit(x, w, y);
     }
 
     void fit(ArrayList<ArrayList<Feature>> x, ArrayList<Double> w, ArrayList<Integer> y) {
